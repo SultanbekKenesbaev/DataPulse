@@ -39,9 +39,7 @@ $user_role = $_SESSION['role'];
             </div>
         </header>
         <section class="sidebar">
-
             <ul class="list">
-                
                 <?php if ($user_role === 'admin'): ?>
                     <li><i class="fa fa-star" aria-hidden="true"></i><a href="admin/approve_articles.php">Оценка статей</a></li>
                     <li><i class="fa fa-user-o" aria-hidden="true"></i><a href="admin/manage_users.php">Управление</a></li>
@@ -62,11 +60,7 @@ $user_role = $_SESSION['role'];
         </section>
         <div class="content">
             <h1>Добро пожаловать, <?php echo htmlspecialchars($_SESSION['username']); ?>!</h1>
-            <p><strong>Роль:</strong> <?php echo htmlspecialchars($_SESSION['role'] ?? 'Не указано'); ?></p>
-<p><strong>Факультет:</strong> <?php echo htmlspecialchars($user['faculty_id'] ?? 'Не указано'); ?></p>
-<p><strong>Кафедра:</strong> <?php echo htmlspecialchars($user['department_id'] ?? 'Не указано'); ?></p>
-<img src="<?php echo htmlspecialchars($user['profile_image'] ?? 'assets/images/default-avatar.png'); ?>" alt="Аватар">
-
+            
         </div>
     </div>
 </body>

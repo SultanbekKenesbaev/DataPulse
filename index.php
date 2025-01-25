@@ -35,8 +35,6 @@ if (isset($_SESSION['user_id'])) {
                     <input type="text" name="username" placeholder="Логин" required>
                     <input type="password" name="password" placeholder="Пароль" required>
                     <button type="submit">Войти</button>
-                    <a href="backend/login_hemis.php" class="btn">Войти через HEMIS</a>
-
                 </form>
                 <p>Нет аккаунта? <a href="register.php">Зарегистрируйтесь</a></p>
             </div>
