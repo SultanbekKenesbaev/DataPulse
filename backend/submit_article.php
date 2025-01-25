@@ -1,61 +1,63 @@
 <?php
 session_start();
-require 'db.php';
+require_once '../backend/db.php'; // Подключение к базе данных
 
-// Проверка, что пользователь авторизован как преподаватель
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'teacher') {
-    header("Location: ../index.php");
-    exit;
+function checkUniquenessWithScopus($title, $content) {
+    $apiKey = '132938bc931783afa4b96fbd2eac801f';
+    $url = 'https://api.elsevier.com/content/search/scopus';
+
+    // Подготовка запроса
+    $query = http_build_query([
+        'query' => "TITLE('$title') OR ABS('$content')",
+        'apiKey' => $apiKey
+    ]);
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, "$url?$query");
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    $response = curl_exec($ch);
+    curl_close($ch);
+
+    $data = json_decode($response, true);
+
+    if (!isset($data['search-results']['entry'])) {
+        return 100; // Если совпадений нет, возвращаем 100% уникальности
+    }
+
+    // Считаем совпадения
+    $totalResults = count($data['search-results']['entry']);
+    return max(0, 100 - ($totalResults * 10)); // Пример оценки: 10% штраф за каждое совпадение
 }
-
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!isset($_SESSION['user_id'])) {
+        header('Location: ../index.php');
+        exit;
+    }
+
+    $teacherId = $_SESSION['user_id'];
     $title = $_POST['title'];
     $content = $_POST['content'];
-    $teacher_id = $_SESSION['user_id'];
 
-    if (isset($_FILES['pdf_file']) && $_FILES['pdf_file']['error'] === 0) {
-        $file = $_FILES['pdf_file'];
-        $file_name = basename($file['name']);
-        $file_ext = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
+    // Проверка уникальности через Scopus API
+    $uniquenessScore = checkUniquenessWithScopus($title, $content);
 
-        if ($file_ext === 'pdf') {
-            $upload_dir = __DIR__ . '/../uploads/';
-            $upload_path = $upload_dir . uniqid() . '.pdf';
+    // Расчет баллов KPI
+    $kpiPoints = ($uniquenessScore >= 90) ? 10 : (($uniquenessScore >= 75) ? 5 : 0);
 
-            if (!is_dir($upload_dir)) {
-                mkdir($upload_dir, 0755, true);
-            }
+    // Сохранение статьи в базу данных
+    $stmt = $pdo->prepare("
+        INSERT INTO articles (teacher_id, title, content, uniqueness_score, kpi_points, status) 
+        VALUES (:teacher_id, :title, :content, :uniqueness_score, :kpi_points, 'pending')
+    ");
+    $stmt->execute([
+        ':teacher_id' => $teacherId,
+        ':title' => $title,
+        ':content' => $content,
+        ':uniqueness_score' => $uniquenessScore,
+        ':kpi_points' => $kpiPoints
+    ]);
 
-            if (move_uploaded_file($file['tmp_name'], $upload_path)) {
-                // Сохраняем данные в базу
-                $stmt = $pdo->prepare("INSERT INTO articles (title, content, teacher_id, file_path) VALUES (?, ?, ?, ?)");
-                $stmt->execute([$title, $content, $teacher_id, $upload_path]);
-
-                // Сообщение об успешной загрузке
-                echo "<p>Статья успешно загружена!😁</p>";
-            } else {
-                echo "<p>Ошибка при загрузке файла.</p>";
-            }
-        } else {
-            echo "<p>Пожалуйста, загрузите файл в формате PDF.</p>";
-        }
-    } else {
-        echo "<p>Ошибка загрузки файла.</p>";
-    }
-} 
-$upload_dir = 'uploads/';  // Папка для хранения файлов
-$new_file_name = uniqid() . '.pdf';
-$upload_path = __DIR__ . '/../' . $upload_dir . $new_file_name; // Абсолютный путь для сохранения
-
-if (move_uploaded_file($file['tmp_name'], $upload_path)) {
-    // Относительный путь, который будет использоваться для скачивания
-    $file_url = $upload_dir . $new_file_name;
-    $stmt = $pdo->prepare("INSERT INTO articles (title, content, teacher_id, file_path) VALUES (?, ?, ?, ?)");
-    $stmt->execute([$title, $content, $teacher_id, $file_url]);
+    echo "Статья успешно загружена! Уникальность: $uniquenessScore%. Баллы KPI: $kpiPoints.";
 }
-
 ?>

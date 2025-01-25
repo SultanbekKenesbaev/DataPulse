@@ -30,7 +30,7 @@ if (isset($_SESSION['user_id'])) {
     <div class="box">
         <div class="block">
             <div class="child">
-                <h1>Добро пожаловать в <span> DATAPULSE </span></h1>
+                <h1>Добро пожаловать в <span>DATAPULSE</span></h1>
                 <form class="form" action="backend/login.php" method="POST">
                     <input type="text" name="username" placeholder="Логин" required>
                     <input type="password" name="password" placeholder="Пароль" required>
