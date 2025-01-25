@@ -12,7 +12,7 @@ if (isset($_SESSION['user_id'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DATA KPI - Регистрация</title>
+    <title>DATAPULSE - Регистрация</title>
     <link rel="stylesheet" href="./assets/css/form.css">
     <link rel="stylesheet" href="./assets/css/reset.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -29,7 +29,7 @@ if (isset($_SESSION['user_id'])) {
     <div class="box">
         <div class="block">
             <div class="child">
-                <h1>Регистрация в <span> DATA KPI</span></h1>
+                <h1>Регистрация в <span> DATAPULSE</span></h1>
                 <form class="form" action="backend/register.php" method="POST">
                     <input type="text" name="username" placeholder="Логин" required>
                     <input type="password" name="password" placeholder="Пароль" required>
